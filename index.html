@@ -1,0 +1,66 @@
+
+import { NextApiRequest, NextApiResponse } from "next";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { text } = req.body;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are a neutral and intelligent media critic. Analyze misinformation, detect bias, and explain in clear terms." },
+      { role: "user", content: text }
+    ]
+  });
+
+  res.status(200).json({ result: completion.choices[0].message.content });
+import { useState } from "react";
+
+export default function Home() {
+  const [input, setInput] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const analyzeText = async () => {
+    setLoading(true);
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: input })
+    });
+    const data = await res.json();
+    setResult(data.result);
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6 font-sans">
+      <h1 className="text-3xl mb-4 text-center font-bold">السلطة الإعلامية الذكية</h1>
+      <textarea
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="أدخل نصاً لتحليله..."
+        className="w-full p-4 rounded-xl bg-gray-800 border border-gray-600 text-white mb-4"
+        rows={6}
+      />
+      <button
+        onClick={analyzeText}
+        disabled={loading}
+        className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl"
+      >
+        {loading ? "جارٍ التحليل..." : "حلّل النص"}
+      </button>
+
+      {result && (
+        <div className="mt-6 p-4 rounded-xl bg-gray-900 border border-gray-700">
+          <h2 className="text-xl font-semibold mb-2">النتيجة:</h2>
+          <p className="whitespace-pre-wrap leading-loose">{result}</p>
+        </div>
+      )}
+    </div>
+  );
+}
